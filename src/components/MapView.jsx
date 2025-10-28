@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { Menu, X } from "lucide-react"; // icon library built into shadcn/lucide-react
 
-// Fix Leaflet default icon issue
+// --- Fix Leaflet icon issue ---
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -12,7 +13,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-// FlyTo animation
+// Helper to fly to a selected quake
 function FlyToLocation({ coordinates }) {
   const map = useMap();
   useEffect(() => {
@@ -26,8 +27,9 @@ export default function MapView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedCoords, setSelectedCoords] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // sidebar toggle
+  const [sidebarOpen, setSidebarOpen] = useState(false); // toggle sidebar for mobile
 
+  // Fetch recent earthquakes
   const fetchEarthquakes = async () => {
     try {
       setLoading(true);
@@ -42,7 +44,7 @@ export default function MapView() {
       setEarthquakes(sorted);
       setError("");
     } catch {
-      setError("⚠️ Failed to fetch earthquake data.");
+      setError("⚠️ Failed to load earthquake data.");
     } finally {
       setLoading(false);
     }
@@ -50,13 +52,14 @@ export default function MapView() {
 
   useEffect(() => {
     fetchEarthquakes();
-    // Force map resize on small screens
+    // Fix for mobile map sizing
     setTimeout(() => window.dispatchEvent(new Event("resize")), 500);
   }, []);
 
+  // --- Handle different states ---
   if (loading)
     return (
-      <div className="flex items-center justify-center h-[70vh]">
+      <div className="flex items-center justify-center h-[60vh]">
         <p className="text-gray-600 text-lg animate-pulse">
           Loading earthquakes...
         </p>
@@ -65,7 +68,7 @@ export default function MapView() {
 
   if (error)
     return (
-      <div className="flex flex-col items-center justify-center h-[70vh]">
+      <div className="flex flex-col items-center justify-center h-[60vh]">
         <p className="text-red-600 font-semibold mb-2">{error}</p>
         <button
           onClick={fetchEarthquakes}
@@ -76,20 +79,29 @@ export default function MapView() {
       </div>
     );
 
+  if (!earthquakes.length)
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh]">
+        <p className="text-gray-700">No earthquake data found.</p>
+      </div>
+    );
+
+  // --- Main layout ---
   return (
-    <div className="relative w-full h-[calc(100vh-150px)]">
-      {/* Sidebar Toggle Button (mobile only) */}
+    <div className="relative flex flex-col md:flex-row w-full h-[80vh] md:h-[85vh] mt-3 px-2 md:px-6 gap-3">
+      {/* Mobile toggle button */}
       <button
-        className="absolute top-3 left-3 z-[1000] bg-blue-600 text-white px-3 py-1 rounded-md shadow-md md:hidden"
         onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="absolute top-3 left-3 z-[1000] bg-blue-600 text-white p-2 rounded-md shadow-md md:hidden"
       >
-        {sidebarOpen ? "Hide List ✖️" : "Show Quakes 📋"}
+        {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      {/* Sidebar (mobile toggle + always visible on desktop) */}
+      {/* Sidebar */}
       <aside
-        className={`absolute md:static top-0 left-0 z-[999] bg-white w-3/4 sm:w-1/2 md:w-1/3 lg:w-1/4 h-full p-4 overflow-y-auto shadow-lg transform transition-transform duration-300 ease-in-out 
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+        className={`absolute md:static top-0 left-0 z-[999] bg-white shadow-md rounded-md overflow-y-auto p-4 transform transition-transform duration-300 ease-in-out 
+          w-3/4 sm:w-1/2 md:w-1/3 lg:w-1/4 h-[80vh] md:h-auto
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
         <div className="flex justify-between items-center mb-2">
           <h2 className="text-lg font-semibold text-gray-800">
@@ -114,12 +126,13 @@ export default function MapView() {
                 : mag >= 4
                 ? "text-orange-500"
                 : "text-green-600";
+
             return (
               <li
                 key={eq.id}
                 onClick={() => {
                   setSelectedCoords([lat, lon]);
-                  setSidebarOpen(false); // hide sidebar when clicked
+                  if (window.innerWidth < 768) setSidebarOpen(false);
                 }}
                 className="py-2 cursor-pointer hover:bg-blue-50 px-2 rounded-md transition"
               >
@@ -147,50 +160,49 @@ export default function MapView() {
               <span className="w-3 h-3 bg-yellow-400 rounded-full mr-1"></span> 2.0–3.9
             </span>
             <span className="flex items-center">
-              <span className="w-3 h-3 bg-green-600 rounded-full mr-1"></span> <2.0
+              <span className="w-3 h-3 bg-green-600 rounded-full mr-1"></span> &lt;2.0
             </span>
           </div>
         </div>
       </aside>
 
       {/* Map */}
-      <MapContainer
-        center={[20, 0]}
-        zoom={2}
-        scrollWheelZoom
-        className="h-full w-full"
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
-        />
-        <FlyToLocation coordinates={selectedCoords} />
+      <div className="flex-1 h-[60vh] md:h-full rounded-lg overflow-hidden shadow-md z-[1]">
+        <MapContainer
+          center={[20, 0]}
+          zoom={2}
+          scrollWheelZoom
+          className="h-full w-full"
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
+          />
+          <FlyToLocation coordinates={selectedCoords} />
 
-        {earthquakes.map((eq) => {
-          const [lon, lat] = eq.geometry.coordinates;
-          const { mag, place, time } = eq.properties;
-          const date = new Date(time).toLocaleString();
-
-          const color =
-            mag >= 6 ? "red" : mag >= 4 ? "orange" : mag >= 2 ? "yellow" : "green";
-
-          const icon = L.divIcon({
-            html: `<div style="background:${color};width:12px;height:12px;border-radius:50%;border:2px solid white;"></div>`,
-          });
-
-          return (
-            <Marker key={eq.id} position={[lat, lon]} icon={icon}>
-              <Popup>
-                <div>
-                  <p className="font-semibold">{place}</p>
-                  <p>Magnitude: {mag.toFixed(1)}</p>
-                  <p className="text-xs text-gray-500">{date}</p>
-                </div>
-              </Popup>
-            </Marker>
-          );
-        })}
-      </MapContainer>
+          {earthquakes.map((eq) => {
+            const [lon, lat] = eq.geometry.coordinates;
+            const { mag, place, time } = eq.properties;
+            const date = new Date(time).toLocaleString();
+            const color =
+              mag >= 6 ? "red" : mag >= 4 ? "orange" : mag >= 2 ? "yellow" : "green";
+            const icon = L.divIcon({
+              html: `<div style="background:${color};width:12px;height:12px;border-radius:50%;border:2px solid white;"></div>`,
+            });
+            return (
+              <Marker key={eq.id} position={[lat, lon]} icon={icon}>
+                <Popup>
+                  <div>
+                    <p className="font-semibold">{place}</p>
+                    <p>Magnitude: {mag.toFixed(1)}</p>
+                    <p className="text-xs text-gray-500">{date}</p>
+                  </div>
+                </Popup>
+              </Marker>
+            );
+          })}
+        </MapContainer>
+      </div>
     </div>
   );
 }
