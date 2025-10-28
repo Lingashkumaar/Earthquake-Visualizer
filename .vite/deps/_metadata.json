@@ -1,0 +1,56 @@
+{
+  "hash": "27cd2586",
+  "configHash": "1bc3e6b2",
+  "lockfileHash": "14c49df0",
+  "browserHash": "8addb443",
+  "optimized": {
+    "leaflet": {
+      "src": "../../node_modules/leaflet/dist/leaflet-src.js",
+      "file": "leaflet.js",
+      "fileHash": "2dd3b1c8",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "76052547",
+      "needsInterop": true
+    },
+    "react-leaflet": {
+      "src": "../../node_modules/react-leaflet/lib/index.js",
+      "file": "react-leaflet.js",
+      "fileHash": "3b01f25e",
+      "needsInterop": false
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "a35e2b70",
+      "needsInterop": true
+    },
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "1e537d01",
+      "needsInterop": true
+    }
+  },
+  "chunks": {
+    "chunk-Ye9CTm_R": {
+      "file": "chunk-Ye9CTm_R.js",
+      "isDynamicEntry": false
+    },
+    "leaflet-src-CciipwUt": {
+      "file": "leaflet-src-CciipwUt.js",
+      "isDynamicEntry": false
+    },
+    "react-DVLzT-zG": {
+      "file": "react-DVLzT-zG.js",
+      "isDynamicEntry": false
+    },
+    "react-dom-myJA8yyu": {
+      "file": "react-dom-myJA8yyu.js",
+      "isDynamicEntry": false
+    }
+  }
+}
